@@ -124,10 +124,18 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Step C: Execute processing function with both raw file and text metrics
         processed_img, structured_report = await process_architectural_cv_and_agent(input_path, user_caption)
 
-        # Step D: Return visual annotations and text records cleanly in the chat sequence
+        # --- STEP D FIXED: SPLIT IMAGE AND TEXT REPORT TO BYPASS 1024 CHARACTER LIMIT ---
+        
+        # 1. Send the visual image asset first with a short, clean caption
         await update.message.reply_photo(
             photo=open(processed_img, 'rb'),
-            caption=structured_report,
+            caption="🖼️ **Section 2: Annotated Image**\nSee the calibrated scaling grid overlay and dimension tracking markers rendered below.",
+            parse_mode="Markdown"
+        )
+
+        # 2. Immediately follow up with the full, detailed Markdown Report (Up to 4096 characters allowed)
+        await update.message.reply_text(
+            text=structured_report,
             parse_mode="Markdown"
         )
 
