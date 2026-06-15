@@ -357,7 +357,7 @@ def run_pipeline(image_path, out_dir):
 
 if __name__ == "__main__":
     import sys
-    out_dir = "/home/claude/results"
+    out_dir = "cv_module/results"
     os.makedirs(out_dir, exist_ok=True)
     for p in sys.argv[1:]:
         r, *_ = run_pipeline(p, out_dir)
