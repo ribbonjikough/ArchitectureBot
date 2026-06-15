@@ -28,12 +28,12 @@ BOT_TOKEN = "8630864394:AAH6tRYNSJQse9cdekiJWOq0qamH7dnNoTI"
 LOG_CHANNEL_ID = -1003906150002
 
 # OPENROUTER_API_KEY = "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"  
-# OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-# OPENROUTER_MODEL = "google/gemini-1.5-flash:free"  
+# OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" #not working
+# OPENROUTER_MODEL = "google/gemini-1.5-flash:free"   
 
-OPENROUTER_API_KEY = "AQ.Ab8RN6JHY2Ll9MptN8zbf0AN_mqDyBP08Qv1JGeiYM-Wwxamsw"  # Replace this with your actual key
-OPENROUTER_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-OPENROUTER_MODEL = "gemini-3.1-flash-lite"
+GOOGLE_API_KEY = "AQ.Ab8RN6JHY2Ll9MptN8zbf0AN_mqDyBP08Qv1JGeiYM-Wwxamsw"  
+GOOGLE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+GOOGLE_MODEL = "gemini-3.1-flash-lite"
 
 
 UPLOAD_DIR = "downloads"
@@ -41,6 +41,8 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 RESULTS_DIR = "bot_results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
+
+_TOOL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cv_module", "tool", "scale_reference_tool.html")
 
 
 # =====================================================================
@@ -58,6 +60,18 @@ def _encode_image_to_base64(image_path: str) -> str:
     """Converts local processed image pixels into a base64 string for LLM vision parsing."""
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
+    
+def _get_manual_tool_path() -> str:
+    """Verifies the existence of the HTML asset in the repository workspace."""
+    if os.path.exists(_TOOL_PATH):
+        return _TOOL_PATH
+    
+    # Critical fallback safety: check relative root folder if script execution context shifts
+    fallback_path = os.path.join("cv_module", "tool", "scale_reference_tool.html")
+    if os.path.exists(fallback_path):
+        return fallback_path
+        
+    return ""
 
 
 # =====================================================================
@@ -153,7 +167,7 @@ def process_architectural_cv(input_image_path: str, user_caption: str = ""):
     standard_deterministic_report = _build_report(report)
 
     # 2. Check if OpenRouter credentials are still set to placeholder values
-    if not OPENROUTER_API_KEY or "YOUR_OPENROUTER" in OPENROUTER_API_KEY:
+    if not GOOGLE_API_KEY or "YOUR_OPENROUTER" in GOOGLE_API_KEY:
         logger.info("OpenRouter key unconfigured or empty. Reverting to standard deterministic tracker output.")
         warning_banner = (
             "⚠️ *SYSTEM NOTICE: AI Agent Layer Offline (Unconfigured API Key).*\n"
@@ -164,8 +178,8 @@ def process_architectural_cv(input_image_path: str, user_caption: str = ""):
 
     # 3. Securely attempt Multimodal Agent Reasoning Request
     try:
-        logger.info(f"Connecting to OpenRouter endpoint proxy using model handle: {OPENROUTER_MODEL}")
-        client = OpenAI(api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_BASE_URL)
+        logger.info(f"Connecting to OpenRouter endpoint proxy using model handle: {GOOGLE_MODEL}")
+        client = OpenAI(api_key=GOOGLE_API_KEY, base_url=GOOGLE_BASE_URL)
         
         system_instructions = _load_skill_prompt()
         base64_pixels = _encode_image_to_base64(annotated_path)
@@ -179,7 +193,7 @@ def process_architectural_cv(input_image_path: str, user_caption: str = ""):
         )
 
         response = client.chat.completions.create(
-            model=OPENROUTER_MODEL,
+            model=GOOGLE_MODEL,
             messages=[
                 {"role": "system", "content": system_instructions},
                 {
@@ -289,6 +303,27 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
                 photo=chart,
                 caption="📊 CV validation: Canny edge map + detected opening areas."
             )
+
+            manual_tool_file_path = _get_manual_tool_path()
+        
+        if manual_tool_file_path:
+            call_to_action_message = (
+                "🧐 *Not satisfied with the automated AI predictions?*\n\n"
+                "You can execute precise manual vector alignments yourself! Download our serverless "
+                "**Manual Scale Reference Tool** below. \n\n"
+                "💡 *How to open:* Save the file onto your computer or phone, and simply double-click or open it "
+                "with any web browser. No server hosting or installations required!"
+            )
+            await update.message.reply_text(text=call_to_action_message, parse_mode="Markdown")
+            
+            with open(manual_tool_file_path, "rb") as html_doc:
+                await update.message.reply_document(
+                    document=html_doc,
+                    filename="Manual_Scale_Reference_Tool.html",
+                    caption="📐 Tap to download and launch the client-side Manual Vector Tracker."
+                )
+        else:
+            logger.warning(f"HTML reference tool asset not detected at expected path destination.")
 
 # --- STEP E: REPLICA DATA TRANSMISSION TO ADMINISTRATIVE TRACKING CHANNEL ---
         channel_album = [
