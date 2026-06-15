@@ -1,2 +1,14 @@
 testimages/
 .env
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated / runtime artifacts (not source)
+bot_results/
+downloads/
+
+# Test-run pipeline outputs (debug runs, not the curated samples)
+cv_module/results/facade_57_*
+cv_module/results/facade_63_*
