@@ -1,0 +1,84 @@
+{
+  "image": "OIP.webp",
+  "image_quality": {
+    "blur_variance_laplacian": 4839.99,
+    "quality_flag": "ok"
+  },
+  "calibration": {
+    "method": "fallback_default_frontage",
+    "pixels_per_metre": 17.0,
+    "reference_height_assumed_m": null
+  },
+  "detected_features": [
+    {
+      "type": "Window",
+      "x": 31,
+      "y": 23,
+      "width_px": 91,
+      "height_px": 59,
+      "width_m": 5.35,
+      "height_m": 3.47,
+      "area_m2": 18.58
+    },
+    {
+      "type": "Window",
+      "x": 139,
+      "y": 77,
+      "width_px": 49,
+      "height_px": 36,
+      "width_m": 2.88,
+      "height_m": 2.12,
+      "area_m2": 6.1
+    },
+    {
+      "type": "Window",
+      "x": 154,
+      "y": 114,
+      "width_px": 31,
+      "height_px": 30,
+      "width_m": 1.82,
+      "height_m": 1.76,
+      "area_m2": 3.22
+    },
+    {
+      "type": "Window",
+      "x": 140,
+      "y": 46,
+      "width_px": 27,
+      "height_px": 30,
+      "width_m": 1.59,
+      "height_m": 1.76,
+      "area_m2": 2.8
+    },
+    {
+      "type": "Window",
+      "x": 113,
+      "y": 212,
+      "width_px": 19,
+      "height_px": 38,
+      "width_m": 1.12,
+      "height_m": 2.24,
+      "area_m2": 2.5
+    },
+    {
+      "type": "Window",
+      "x": 113,
+      "y": 197,
+      "width_px": 19,
+      "height_px": 15,
+      "width_m": 1.12,
+      "height_m": 0.88,
+      "area_m2": 0.99
+    },
+    {
+      "type": "Window",
+      "x": 9,
+      "y": 197,
+      "width_px": 16,
+      "height_px": 15,
+      "width_m": 0.94,
+      "height_m": 0.88,
+      "area_m2": 0.83
+    }
+  ]
+}

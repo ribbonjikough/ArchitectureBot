@@ -1,0 +1,34 @@
+{
+  "image": "Chipperfield.jpg",
+  "image_quality": {
+    "blur_variance_laplacian": 1073.82,
+    "quality_flag": "ok"
+  },
+  "calibration": {
+    "method": "person_detection",
+    "pixels_per_metre": 94.12,
+    "reference_height_assumed_m": 1.7
+  },
+  "detected_features": [
+    {
+      "type": "Door",
+      "x": 307,
+      "y": 832,
+      "width_px": 74,
+      "height_px": 164,
+      "width_m": 0.79,
+      "height_m": 1.74,
+      "area_m2": 1.37
+    },
+    {
+      "type": "Door",
+      "x": 0,
+      "y": 833,
+      "width_px": 59,
+      "height_px": 169,
+      "width_m": 0.63,
+      "height_m": 1.8,
+      "area_m2": 1.13
+    }
+  ]
+}

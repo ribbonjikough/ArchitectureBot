@@ -1,0 +1,13 @@
+{
+  "image": "Nygaardsplassen_in_Fredrikstad.jpg",
+  "image_quality": {
+    "blur_variance_laplacian": 1843.89,
+    "quality_flag": "ok"
+  },
+  "calibration": {
+    "method": "fallback_default_frontage",
+    "pixels_per_metre": 61.33,
+    "reference_height_assumed_m": null
+  },
+  "detected_features": []
+}

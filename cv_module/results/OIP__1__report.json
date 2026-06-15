@@ -1,0 +1,44 @@
+{
+  "image": "OIP__1_.webp",
+  "image_quality": {
+    "blur_variance_laplacian": 1377.96,
+    "quality_flag": "ok"
+  },
+  "calibration": {
+    "method": "fallback_default_frontage",
+    "pixels_per_metre": 17.0,
+    "reference_height_assumed_m": null
+  },
+  "detected_features": [
+    {
+      "type": "Window",
+      "x": 0,
+      "y": 128,
+      "width_px": 55,
+      "height_px": 93,
+      "width_m": 3.24,
+      "height_m": 5.47,
+      "area_m2": 17.7
+    },
+    {
+      "type": "Window",
+      "x": 63,
+      "y": 126,
+      "width_px": 95,
+      "height_px": 50,
+      "width_m": 5.59,
+      "height_m": 2.94,
+      "area_m2": 16.44
+    },
+    {
+      "type": "Window",
+      "x": 80,
+      "y": 172,
+      "width_px": 35,
+      "height_px": 74,
+      "width_m": 2.06,
+      "height_m": 4.35,
+      "area_m2": 8.96
+    }
+  ]
+}

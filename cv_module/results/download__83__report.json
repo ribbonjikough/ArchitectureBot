@@ -1,0 +1,24 @@
+{
+  "image": "download__83_.jpg",
+  "image_quality": {
+    "blur_variance_laplacian": 1625.93,
+    "quality_flag": "ok"
+  },
+  "calibration": {
+    "method": "fallback_default_frontage",
+    "pixels_per_metre": 61.25,
+    "reference_height_assumed_m": null
+  },
+  "detected_features": [
+    {
+      "type": "Window",
+      "x": 374,
+      "y": 149,
+      "width_px": 94,
+      "height_px": 70,
+      "width_m": 1.53,
+      "height_m": 1.14,
+      "area_m2": 1.75
+    }
+  ]
+}

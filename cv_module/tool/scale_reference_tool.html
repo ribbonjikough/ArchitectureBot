@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Facade Scale Reference Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Archivo:wght@400;600;800&display=swap');
+
+  :root{
+    --ink:#0b1b2b;
+    --paper:#f4f1ea;
+    --line:#0b1b2b;
+    --cyan:#3aa6a6;
+    --accent:#e0563b;
+    --grid:#cfd6d8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Archivo',sans-serif; background:var(--paper); color:var(--ink);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+  header{
+    padding:28px 32px 14px; border-bottom:3px solid var(--ink);
+  }
+  header h1{
+    font-family:'JetBrains Mono',monospace; font-weight:800; font-size:1.6rem; margin:0;
+    letter-spacing:.5px;
+  }
+  header p{margin:6px 0 0; font-size:.92rem; color:#3c4d5c; max-width:640px;}
+
+  .wrap{display:flex; gap:24px; padding:24px 32px; align-items:flex-start; flex-wrap:wrap;}
+
+  .panel{
+    background:#fff; border:2px solid var(--ink); border-radius:2px;
+    box-shadow:4px 4px 0 var(--ink);
+  }
+  .controls{width:300px; padding:18px; flex-shrink:0;}
+  .controls h2{
+    font-family:'JetBrains Mono',monospace; font-size:.78rem; letter-spacing:1.5px;
+    text-transform:uppercase; margin:0 0 10px; color:var(--cyan); border-bottom:1px solid var(--grid); padding-bottom:6px;
+  }
+  .step{margin-bottom:22px;}
+  .step p{font-size:.85rem; line-height:1.45; margin:4px 0 10px; color:#3c4d5c;}
+
+  button, input[type=file]{
+    font-family:'JetBrains Mono',monospace; font-size:.8rem; font-weight:500;
+  }
+  .btn{
+    display:block; width:100%; padding:10px 12px; margin-bottom:8px;
+    background:var(--ink); color:#fff; border:none; border-radius:2px; cursor:pointer;
+    text-align:left; letter-spacing:.5px; transition:transform .08s;
+  }
+  .btn:hover{transform:translateX(2px);}
+  .btn.alt{background:var(--cyan);}
+  .btn.warn{background:var(--accent);}
+  .btn.active{outline:3px solid var(--accent); outline-offset:0;}
+  .btn:disabled{background:#c9cdd0; cursor:not-allowed;}
+
+  input[type=number], select{
+    width:100%; padding:8px; border:2px solid var(--ink); border-radius:2px; font-size:.85rem;
+    margin-bottom:8px; font-family:'JetBrains Mono',monospace;
+  }
+  label.small{font-size:.75rem; text-transform:uppercase; letter-spacing:1px; color:#3c4d5c; display:block; margin-bottom:4px;}
+
+  .calib-readout{
+    font-family:'JetBrains Mono',monospace; font-size:.8rem; background:var(--paper);
+    border:1px dashed var(--cyan); padding:8px; border-radius:2px; margin-top:6px;
+  }
+
+  .canvas-wrap{
+    flex:1; min-width:380px; padding:12px; position:relative;
+  }
+  #canvas{display:block; max-width:100%; border:1px solid var(--grid); cursor:crosshair; background:#888;}
+  .hint{
+    font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#3c4d5c; margin:8px 0 0;
+  }
+
+  .features{width:300px; padding:18px; flex-shrink:0;}
+  .feature-row{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    border-bottom:1px solid var(--grid); padding:8px 0; font-size:.82rem;
+  }
+  .feature-row .tag{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.65rem;
+    padding:2px 6px; border-radius:2px; color:#fff;
+  }
+  .tag.Window{background:var(--cyan);}
+  .tag.Door{background:var(--accent);}
+  .tag.Other{background:#8a8f94;}
+  .feature-row .dims{font-family:'JetBrains Mono',monospace;}
+  .feature-row button{
+    background:none; border:none; color:var(--accent); cursor:pointer; font-size:1rem; line-height:1;
+  }
+  .empty{font-size:.8rem; color:#8a8f94; font-style:italic;}
+  .export-row{display:flex; gap:8px; margin-top:14px;}
+  .export-row .btn{margin-bottom:0;}
+
+  .footer-note{
+    font-family:'JetBrains Mono',monospace; font-size:.7rem; color:#8a8f94; padding:0 32px 24px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>// ARCHITECTURAL SCALE REFERENCE TOOL</h1>
+  <p>Upload a facade photo, calibrate a real-world scale using any known measurement
+  (a door, a brick course, a person's height, a tile), then draw boxes around windows,
+  doors, or other features to get their real dimensions.</p>
+</header>
+
+<div class="wrap">
+
+  <!-- LEFT: CONTROLS -->
+  <div class="panel controls">
+    <h2>01 / Load Image</h2>
+    <div class="step">
+      <input type="file" id="fileInput" accept="image/*" class="btn alt" style="padding:10px;">
+    </div>
+
+    <h2>02 / Set Scale</h2>
+    <div class="step">
+      <p>Click <b>Start calibration</b>, then click two points on the image spanning a
+      <b>known real-world distance</b> (e.g. a standard door height ≈ 2.0m, a person ≈ 1.7m).</p>
+      <button class="btn alt" id="calibBtn">Start calibration</button>
+      <label class="small">Real-world distance of that line (metres)</label>
+      <input type="number" id="calibDist" step="0.01" placeholder="e.g. 2.0" disabled>
+      <div class="calib-readout" id="calibReadout">Not calibrated — measurements shown in pixels only.</div>
+    </div>
+
+    <h2>03 / Mark Features</h2>
+    <div class="step">
+      <p>Click <b>Add feature</b>, choose a type, then drag a box on the image around
+      a window, door, or other element.</p>
+      <label class="small">Feature type</label>
+      <select id="featType">
+        <option>Window</option>
+        <option>Door</option>
+        <option>Other</option>
+      </select>
+      <button class="btn warn" id="addBtn">Add feature</button>
+    </div>
+
+    <h2>04 / Export</h2>
+    <div class="export-row">
+      <button class="btn" id="exportPng">Save image</button>
+      <button class="btn" id="exportJson">Save report</button>
+    </div>
+  </div>
+
+  <!-- CENTER: CANVAS -->
+  <div class="panel canvas-wrap">
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <p class="hint" id="hint">Load an image to begin.</p>
+  </div>
+
+  <!-- RIGHT: FEATURE LIST -->
+  <div class="panel features">
+    <h2>Detected / Marked Features</h2>
+    <div id="featureList"><p class="empty">No features marked yet.</p></div>
+  </div>
+
+</div>
+
+<p class="footer-note">Scale is derived from a user-confirmed reference distance, not automatic detection — this keeps measurements accurate regardless of image quality, blur, or angle.</p>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const hint = document.getElementById('hint');
+
+let img = null;
+let imgW = 0, imgH = 0;
+let pxPerM = null;
+
+let mode = null; // 'calib-1' | 'calib-2' | 'add'
+let calibPoints = [];
+let pendingCalibLine = null;
+
+let features = [];
+let dragStart = null, dragCurrent = null;
+
+const colors = {Window:'#3aa6a6', Door:'#e0563b', Other:'#8a8f94'};
+
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    img = new Image();
+    img.onload = ()=>{
+      const maxW = 800;
+      const scale = Math.min(1, maxW / img.width);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      imgW = canvas.width; imgH = canvas.height;
+      redraw();
+      hint.textContent = 'Image loaded. Calibrate the scale before marking features.';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('calibBtn').addEventListener('click', ()=>{
+  if(!img){ alert('Load an image first.'); return; }
+  mode = 'calib-1';
+  calibPoints = [];
+  document.getElementById('calibBtn').classList.add('active');
+  document.getElementById('calibDist').disabled = true;
+  hint.textContent = 'Calibration: click the FIRST point of a known-length reference.';
+});
+
+document.getElementById('addBtn').addEventListener('click', ()=>{
+  if(!img){ alert('Load an image first.'); return; }
+  mode = 'add';
+  document.getElementById('addBtn').classList.add('active');
+  hint.textContent = 'Drag a box around the ' + document.getElementById('featType').value.toLowerCase() + '.';
+});
+
+document.getElementById('calibDist').addEventListener('change', e=>{
+  const meters = parseFloat(e.target.value);
+  if(!meters || !pendingCalibLine) return;
+  const [p1,p2] = pendingCalibLine;
+  const pxDist = Math.hypot(p2.x-p1.x, p2.y-p1.y);
+  pxPerM = pxDist / meters;
+  document.getElementById('calibReadout').textContent =
+    `Calibrated: ${pxPerM.toFixed(2)} px = 1 m (reference: ${pxDist.toFixed(1)}px = ${meters}m)`;
+  redraw();
+});
+
+canvas.addEventListener('mousedown', e=>{
+  const pos = getPos(e);
+  if(mode === 'add'){
+    dragStart = pos; dragCurrent = pos;
+  }
+});
+canvas.addEventListener('mousemove', e=>{
+  if(mode === 'add' && dragStart){
+    dragCurrent = getPos(e);
+    redraw();
+  }
+});
+canvas.addEventListener('mouseup', e=>{
+  if(mode === 'add' && dragStart){
+    const pos = getPos(e);
+    const x = Math.min(dragStart.x, pos.x), y = Math.min(dragStart.y, pos.y);
+    const w = Math.abs(pos.x - dragStart.x), h = Math.abs(pos.y - dragStart.y);
+    if(w > 4 && h > 4){
+      features.push({type: document.getElementById('featType').value, x, y, w, h});
+      renderFeatureList();
+    }
+    dragStart = null; dragCurrent = null;
+    mode = null;
+    document.getElementById('addBtn').classList.remove('active');
+    hint.textContent = 'Feature added. Click "Add feature" to mark another.';
+    redraw();
+  }
+});
+canvas.addEventListener('click', e=>{
+  if(mode === 'calib-1' || mode === 'calib-2'){
+    const pos = getPos(e);
+    calibPoints.push(pos);
+    if(mode === 'calib-1'){
+      mode = 'calib-2';
+      hint.textContent = 'Calibration: click the SECOND point of that reference.';
+    } else {
+      pendingCalibLine = [calibPoints[0], calibPoints[1]];
+      mode = null;
+      document.getElementById('calibBtn').classList.remove('active');
+      document.getElementById('calibDist').disabled = false;
+      document.getElementById('calibDist').focus();
+      hint.textContent = 'Now enter the real-world length of that line (in metres) on the left.';
+      redraw();
+    }
+  }
+});
+
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+}
+
+function redraw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  // calibration line
+  if(pendingCalibLine){
+    drawLine(pendingCalibLine[0], pendingCalibLine[1], '#e0563b');
+  }
+  if(calibPoints.length === 1 && mode==='calib-2'){
+    drawPoint(calibPoints[0], '#e0563b');
+  }
+
+  // features
+  features.forEach((f,i)=>drawFeature(f,i));
+
+  // drag preview
+  if(dragStart && dragCurrent){
+    const x = Math.min(dragStart.x, dragCurrent.x), y = Math.min(dragStart.y, dragCurrent.y);
+    const w = Math.abs(dragCurrent.x-dragStart.x), h = Math.abs(dragCurrent.y-dragStart.y);
+    ctx.strokeStyle = colors[document.getElementById('featType').value];
+    ctx.lineWidth = 2; ctx.setLineDash([5,4]);
+    ctx.strokeRect(x,y,w,h);
+    ctx.setLineDash([]);
+  }
+
+  // scale bar
+  if(pxPerM){
+    drawScaleBar();
+  }
+}
+
+function drawPoint(p,color){
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+}
+function drawLine(p1,p2,color){
+  ctx.strokeStyle = color; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  drawPoint(p1,color); drawPoint(p2,color);
+}
+
+function drawFeature(f,i){
+  ctx.strokeStyle = colors[f.type]; ctx.lineWidth = 2;
+  ctx.strokeRect(f.x,f.y,f.w,f.h);
+  ctx.fillStyle = colors[f.type];
+  ctx.fillRect(f.x, f.y-16, 130, 16);
+  ctx.fillStyle = '#fff';
+  ctx.font = '11px JetBrains Mono, monospace';
+  let label = f.type;
+  if(pxPerM){
+    label += `: ${(f.w/pxPerM).toFixed(2)}m × ${(f.h/pxPerM).toFixed(2)}m`;
+  } else {
+    label += `: ${f.w.toFixed(0)}px × ${f.h.toFixed(0)}px`;
+  }
+  ctx.fillText(label, f.x+4, f.y-4);
+}
+
+function drawScaleBar(){
+  const barPx = pxPerM; // 1 metre
+  const x0 = 12, y0 = canvas.height - 14;
+  ctx.strokeStyle = '#0b1b2b'; ctx.fillStyle = '#0b1b2b';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0+barPx,y0); ctx.stroke();
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.fillText('1 m', x0, y0-6);
+}
+
+function renderFeatureList(){
+  const list = document.getElementById('featureList');
+  if(features.length === 0){
+    list.innerHTML = '<p class="empty">No features marked yet.</p>';
+    return;
+  }
+  list.innerHTML = '';
+  features.forEach((f,i)=>{
+    const row = document.createElement('div');
+    row.className = 'feature-row';
+    const dims = pxPerM
+      ? `${(f.w/pxPerM).toFixed(2)}m × ${(f.h/pxPerM).toFixed(2)}m`
+      : `${f.w.toFixed(0)}px × ${f.h.toFixed(0)}px`;
+    row.innerHTML = `<span class="tag ${f.type}">${f.type}</span><span class="dims">${dims}</span>`;
+    const del = document.createElement('button');
+    del.textContent = '✕';
+    del.onclick = ()=>{ features.splice(i,1); renderFeatureList(); redraw(); };
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('exportPng').addEventListener('click', ()=>{
+  if(!img){ alert('Load an image first.'); return; }
+  const link = document.createElement('a');
+  link.download = 'facade_annotated.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+document.getElementById('exportJson').addEventListener('click', ()=>{
+  if(!img){ alert('Load an image first.'); return; }
+  const report = {
+    calibration: pxPerM ? {pixels_per_metre: Math.round(pxPerM*100)/100} : {pixels_per_metre: null, note: 'not calibrated — dimensions in px'},
+    features: features.map(f=>({
+      type: f.type,
+      width_px: Math.round(f.w),
+      height_px: Math.round(f.h),
+      width_m: pxPerM ? Math.round((f.w/pxPerM)*100)/100 : null,
+      height_m: pxPerM ? Math.round((f.h/pxPerM)*100)/100 : null,
+      area_m2: pxPerM ? Math.round((f.w/pxPerM)*(f.h/pxPerM)*100)/100 : null
+    }))
+  };
+  const blob = new Blob([JSON.stringify(report,null,2)], {type:'application/json'});
+  const link = document.createElement('a');
+  link.download = 'architectural_scale_report.json';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+});
+</script>
+</body>
+</html>
