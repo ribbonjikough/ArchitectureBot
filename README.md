@@ -1,2 +1,2 @@
-**Install this dependency first before running**  
-pip install python-telegram-bot
+**Install these dependencies first before running**  
+pip install python-telegram-bot openai matplotlib
