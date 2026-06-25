@@ -24,14 +24,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = "8630864394:AAH6tRYNSJQse9cdekiJWOq0qamH7dnNoTI"
-LOG_CHANNEL_ID = -1003906150002
+BOT_TOKEN = ""
+LOG_CHANNEL_ID = ""
 
 # OPENROUTER_API_KEY = "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"  
 # OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" #not working
 # OPENROUTER_MODEL = "google/gemini-1.5-flash:free"   
 
-GOOGLE_API_KEY = "AQ.Ab8RN6JHY2Ll9MptN8zbf0AN_mqDyBP08Qv1JGeiYM-Wwxamsw"  
+GOOGLE_API_KEY = ""  
 GOOGLE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 GOOGLE_MODEL = "gemini-3.1-flash-lite"
 
