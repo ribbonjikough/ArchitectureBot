@@ -6,7 +6,7 @@ This project was developed for the WID3013 Practical Computer Vision Skill assig
 
 ---
 
-## 🚀 Features
+## Features
 
 * **Automated Facade Analyzer:** Processes images of building facades to detect structure geometries, extracting bounding box arrays, structural lines, and local element heights.
 * **Hybrid Scaling Engine:** Computes real-world dimensions by dynamically running human vector tracking (assuming a standard 1.70m reference height) or deploying a smart fallback default frontage calibration.
@@ -15,7 +15,7 @@ This project was developed for the WID3013 Practical Computer Vision Skill assig
 
 ---
 
-## 🛠️ System Workflows
+## System Workflows
 
 ### 1. Architectural Automated Workflow
 1. **User Upload:** The user uploads a clear facade photograph (with an optional text verification caption) to the Telegram bot interface.
@@ -30,7 +30,7 @@ This project was developed for the WID3013 Practical Computer Vision Skill assig
 
 ---
 
-## 🛡️ Edge-Case Error Handling & System Guardrails
+## Edge-Case Error Handling & System Guardrails
 
 To ensure stable operation during evaluations, the integration controller contains defensive programming blocks to gracefully manage data anomalies, input errors, and server infrastructure drops:
 
@@ -47,7 +47,7 @@ To ensure stable operation during evaluations, the integration controller contai
 * **Missing or Expired Token Hook:** If the `.env` file does not contain a valid `GEMINI_API_KEY` (or if Google's proxy endpoints throw a network timeout exception), the bot intercepts the error background crash thread.
 * **Deterministic Local Fallback:** Instead of going offline, the code activates a fallback gatekeeper banner. It drops the cloud dependence layer entirely and relies strictly on local computer memory to generate and display the original classical computer-vision calculation table, ensuring the bot stays online and remains fully functional.
 
-## ⚙️ Setup and Installation
+## Setup and Installation
 
 ### Prerequisites
 * **Python 3.10+**
@@ -55,8 +55,7 @@ To ensure stable operation during evaluations, the integration controller contai
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/yourusername/Architectural-Scale-Assistant.git](https://github.com/yourusername/Architectural-Scale-Assistant.git)
-cd Architectural-Scale-Assistant
+git clone [https://github.com/ribbonjikough/CVPRPython.git]
 ```
 
 ### 2. Create and Activate a Virtual Environment
