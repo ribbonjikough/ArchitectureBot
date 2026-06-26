@@ -2,39 +2,36 @@ import logging
 import os
 import sys
 import base64
-
 import matplotlib
-matplotlib.use("Agg")  # headless backend: lets the CV pipeline save charts inside the bot
+matplotlib.use("Agg")  #
 
-from telegram import Update, InputMediaPhoto
+from dotenv import load_dotenv  
+from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from openai import OpenAI  # Standard library used to query OpenRouter / OpenAI endpoints
+from openai import OpenAI  # Interacts with Google AI Studio via OpenAI 
+
+# Load secrets from a local un-tracked .env file container
+load_dotenv()
 
 # Make Member 2's CV pipeline importable from this script
 _PIPELINE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cv_module", "src")
 sys.path.insert(0, _PIPELINE_DIR)
 from facade_scale_pipeline import run_pipeline
 
-# =====================================================================
-# 1. CONFIGURATION & CONFIG INITIALIZATION (PUBLIC GROUP PROTOCOLS)
-# =====================================================================
+# =========================================
+# 1. CONFIGURATION & CONFIG INITIALIZATION 
+# =========================================
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = ""
-LOG_CHANNEL_ID = ""
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+GOOGLE_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# OPENROUTER_API_KEY = "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"  
-# OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" #not working
-# OPENROUTER_MODEL = "google/gemini-1.5-flash:free"   
-
-GOOGLE_API_KEY = ""  
 GOOGLE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-GOOGLE_MODEL = "gemini-3.1-flash-lite"
-
+GOOGLE_MODEL = "gemini-3.1-flash-lite" # Can change to other available Gemini models if needed
 
 UPLOAD_DIR = "downloads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -61,6 +58,7 @@ def _encode_image_to_base64(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
     
+
 def _get_manual_tool_path() -> str:
     """Verifies the existence of the HTML asset in the repository workspace."""
     if os.path.exists(_TOOL_PATH):
@@ -148,27 +146,22 @@ def _build_report(report: dict) -> str:
 
 
 # =====================================================================
-# CV BRIDGE (runs Member 2's real OpenCV pipeline + OpenRouter Fallback Warning)
+# CV BRIDGE (runs Member 2's real OpenCV pipeline + Google AI Studio Layer)
 # =====================================================================
 def process_architectural_cv(input_image_path: str, user_caption: str = ""):
-    """Run the real OpenCV pipeline and attempt to process details with OpenRouter LLM.
-
-    If OpenRouter is unavailable or unconfigured, appends a warning notification banner
-    to the chat and gracefully falls back to the original deterministic output layout.
-    Returns (annotated_image_path, report_text, validation_chart_path).
-    """
+    """Run the real OpenCV pipeline and attempt to process details with Google AI Studio LLM."""
     report, annotated_path, _grid_path, chart_path, _report_path = run_pipeline(
         input_image_path, RESULTS_DIR
     )
     logger.info(f"Pipeline finished: {len(report['detected_features'])} feature(s), "
                 f"calibration={report['calibration']['method']}")
     
-    # 1. Compile the default standard report as our definitive backup asset
+    # Compile the default standard report as our definitive backup asset
     standard_deterministic_report = _build_report(report)
 
-    # 2. Check if OpenRouter credentials are still set to placeholder values
-    if not GOOGLE_API_KEY or "YOUR_OPENROUTER" in GOOGLE_API_KEY:
-        logger.info("OpenRouter key unconfigured or empty. Reverting to standard deterministic tracker output.")
+    # Check if configurations are missing or empty
+    if not GOOGLE_API_KEY:
+        logger.info("Google AI Studio key unconfigured or empty. Reverting to standard deterministic tracker output.")
         warning_banner = (
             "⚠️ *SYSTEM NOTICE: AI Agent Layer Offline (Unconfigured API Key).*\n"
             "_Displaying original classical computer-vision heuristic calculations directly from local memory:_\n\n"
@@ -176,9 +169,9 @@ def process_architectural_cv(input_image_path: str, user_caption: str = ""):
         )
         return annotated_path, warning_banner + standard_deterministic_report, chart_path
 
-    # 3. Securely attempt Multimodal Agent Reasoning Request
+    # Securely attempt Multimodal Agent Reasoning Request
     try:
-        logger.info(f"Connecting to OpenRouter endpoint proxy using model handle: {GOOGLE_MODEL}")
+        logger.info(f"Connecting to Google AI Studio gateway using model handle: {GOOGLE_MODEL}")
         client = OpenAI(api_key=GOOGLE_API_KEY, base_url=GOOGLE_BASE_URL)
         
         system_instructions = _load_skill_prompt()
@@ -208,11 +201,10 @@ def process_architectural_cv(input_image_path: str, user_caption: str = ""):
         )
         
         agentic_llm_report = response.choices[0].message.content
-        logger.info("OpenRouter response generated successfully.")
+        logger.info("Google AI Studio response generated successfully.")
         return annotated_path, agentic_llm_report, chart_path
 
     except Exception as api_exception:
-            # FIXED: Encapsulated the raw error message inside a monospace code block to prevent Telegram parsing crashes
             logger.error(f"⚠️ Google Studio Connection Error: {str(api_exception)}. Falling back to programmatic output.")
             warning_banner = (
                 f"⚠️ *SYSTEM WARNING: Google AI Studio Agent Request Failed!*\n"
@@ -259,7 +251,7 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Captures an uploaded image and runs it through the real CV pipeline."""
     chat_id = update.effective_chat.id
     user_caption = update.message.caption or ""
-    logger.info(f"Incoming photo. Caption: '{user_caption}'")
+    logger.info(f"Incoming photo from Chat ID {chat_id}. Caption: '{user_caption}'")
 
     await update.message.reply_text("🔄 Image received. Running the computer-vision pipeline...")
 
@@ -274,7 +266,7 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         await context.bot.send_chat_action(chat_id=chat_id, action=ChatAction.UPLOAD_PHOTO)
 
-        # Step C: Run the OpenCV pipeline + OpenRouter Layer (With caption routing)
+        # Step C: Run the OpenCV pipeline + Generative AI Verification Layer
         annotated_img, report_text, chart_img = process_architectural_cv(input_path, user_caption)
 
         # Step D: Deliver responses cleanly back into User Interaction Space
@@ -290,13 +282,11 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
         except Exception as parse_error:
             if "Can't parse entities" in str(parse_error):
                 logger.warning("AI Markdown syntax was malformed. Re-sending report as sanitized plain text.")
-                # Strip the parse_mode parameter entirely so Telegram prints it raw without checking tags
                 await update.message.reply_text(
                     text="⚠️ *Formatting Notice:* The AI report formatting contained unclosed markdown tags. Displaying sanitized plain text report below:\n\n" + report_text
                 )
             else:
-                # If it's a completely different error, raise it up to the primary crash block
-                raise error_context
+                raise parse_error
             
         with open(chart_img, 'rb') as chart:
             await update.message.reply_photo(
@@ -304,7 +294,8 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
                 caption="📊 CV validation: Canny edge map + detected opening areas."
             )
 
-            manual_tool_file_path = _get_manual_tool_path()
+        # Step E: Attach the Manual Fallback Tool asset dynamically from local folder structures
+        manual_tool_file_path = _get_manual_tool_path()
         
         if manual_tool_file_path:
             call_to_action_message = (
@@ -325,29 +316,6 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             logger.warning(f"HTML reference tool asset not detected at expected path destination.")
 
-# --- STEP E: REPLICA DATA TRANSMISSION TO ADMINISTRATIVE TRACKING CHANNEL ---
-        channel_album = [
-            InputMediaPhoto(media=open(input_path, 'rb'), caption="📥 [CHANNEL LOG] Raw Original Upload File"),
-            InputMediaPhoto(media=open(annotated_img, 'rb'), caption="🖼️ [CHANNEL LOG] CV Annotated Measurement Frame"),
-            InputMediaPhoto(media=open(chart_img, 'rb'), caption="📊 [CHANNEL LOG] Diagnostic Tracking Graph Charts")
-        ]
-        await context.bot.send_media_group(chat_id=LOG_CHANNEL_ID, media=channel_album)
-        
-        # FIXED: Encapsulated the Channel Text Logger inside a try/except gatekeeper block
-        try:
-            await context.bot.send_message(
-                chat_id=LOG_CHANNEL_ID,
-                text=f"📋 **[LOG TRANSACTION ENTRY FOR USER {chat_id}]**\n\n{report_text}",
-                parse_mode="Markdown"
-            )
-        except Exception as log_parse_error:
-            logger.warning("Channel log Markdown syntax was malformed. Re-sending log entry as raw plain text.")
-            # Strip the parse_mode parameter entirely so the channel accepts the log cleanly as plain text
-            await context.bot.send_message(
-                chat_id=LOG_CHANNEL_ID,
-                text=f"📋 ⚠️ [LOG TRANSACTION ENTRY FOR USER {chat_id} - PLAIN TEXT FALLBACK]\n\n{report_text}"
-            )
-
     except Exception as e:
         logger.error(f"Workflow crash: {str(e)}", exc_info=True)
         await update.message.reply_text(
@@ -360,15 +328,18 @@ async def handle_photo_upload(update: Update, context: ContextTypes.DEFAULT_TYPE
 # =====================================================================
 def main():
     """Launches the central polling application engine."""
-    app = Application.builder().token(BOT_TOKEN).build()
+    # Ensure variables are populated locally before launching listener
+    if not TELEGRAM_BOT_TOKEN:
+        print("🛑 CRITICAL ERROR: TELEGRAM_BOT_TOKEN missing from environment settings! Exiting.")
+        sys.exit(1)
+
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo_upload))
-    
-    # Register text rejection guardrail filter
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reject_text_only_messages))
 
-    print("🚀 Integration Engine online. Ready to evaluate architectural proportions...")
+    print("Integration Engine online. Ready to evaluate architectural proportions...")
     app.run_polling()
 
 
