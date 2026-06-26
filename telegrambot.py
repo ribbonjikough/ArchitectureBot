@@ -27,7 +27,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Safely extract tokens from environmental variables rather than public strings
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 GOOGLE_API_KEY = os.environ.get("GEMINI_API_KEY")
 
